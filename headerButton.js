@@ -433,10 +433,83 @@
         } catch (e) { heroBusy = false; }
     }
 
+    // Hero action labels, keyed by the locale Jellyfin writes to <html lang>.
+    // The map only needs to cover the two hero buttons; anything missing falls
+    // back to English. Region variants (en-gb, pt-br, zh-tw, …) are matched
+    // first, then the base language.
+    var NF_HERO_LABELS = {
+        af: { play: 'Speel', more: 'Meer inligting' },
+        ar: { play: 'تشغيل', more: 'مزيد من المعلومات' },
+        be: { play: 'Прайграць', more: 'Больш інфармацыі' },
+        bg: { play: 'Пусни', more: 'Повече информация' },
+        bn: { play: 'চালান', more: 'আরও তথ্য' },
+        ca: { play: 'Reprodueix', more: 'Més informació' },
+        cs: { play: 'Přehrát', more: 'Více informací' },
+        cy: { play: 'Chwarae', more: 'Mwy o wybodaeth' },
+        da: { play: 'Afspil', more: 'Mere info' },
+        de: { play: 'Abspielen', more: 'Mehr Infos' },
+        el: { play: 'Αναπαραγωγή', more: 'Περισσότερες πληροφορίες' },
+        en: { play: 'Play', more: 'More Info' },
+        eo: { play: 'Ludi', more: 'Pli da informoj' },
+        es: { play: 'Reproducir', more: 'Más información' },
+        et: { play: 'Esita', more: 'Rohkem teavet' },
+        eu: { play: 'Erreproduzitu', more: 'Informazio gehiago' },
+        fa: { play: 'پخش', more: 'اطلاعات بیشتر' },
+        fi: { play: 'Toista', more: 'Lisätietoja' },
+        fil: { play: 'I-play', more: 'Higit pang impormasyon' },
+        fr: { play: 'Lecture', more: "Plus d'infos" },
+        gl: { play: 'Reproducir', more: 'Máis información' },
+        gsw: { play: 'Abspielen', more: 'Mehr Infos' },
+        he: { play: 'הפעלה', more: 'מידע נוסף' },
+        hi: { play: 'चलाएँ', more: 'अधिक जानकारी' },
+        hr: { play: 'Reproduciraj', more: 'Više informacija' },
+        hu: { play: 'Lejátszás', more: 'További információ' },
+        id: { play: 'Putar', more: 'Info selengkapnya' },
+        it: { play: 'Riproduci', more: 'Altre informazioni' },
+        ja: { play: '再生', more: '詳細情報' },
+        kk: { play: 'Ойнату', more: 'Қосымша ақпарат' },
+        ko: { play: '재생', more: '상세 정보' },
+        lt: { play: 'Leisti', more: 'Daugiau informacijos' },
+        lv: { play: 'Atskaņot', more: 'Vairāk informācijas' },
+        mr: { play: 'प्ले करा', more: 'अधिक माहिती' },
+        ms: { play: 'Main', more: 'Maklumat lanjut' },
+        nb: { play: 'Spill av', more: 'Mer informasjon' },
+        nl: { play: 'Afspelen', more: 'Meer informatie' },
+        nn: { play: 'Spel av', more: 'Meir informasjon' },
+        pl: { play: 'Odtwórz', more: 'Więcej informacji' },
+        pt: { play: 'Reproduzir', more: 'Mais informações' },
+        'pt-br': { play: 'Reproduzir', more: 'Mais informações' },
+        'pt-pt': { play: 'Reproduzir', more: 'Mais informações' },
+        ro: { play: 'Redă', more: 'Mai multe informații' },
+        ru: { play: 'Смотреть', more: 'Подробнее' },
+        sk: { play: 'Prehrať', more: 'Viac informácií' },
+        sl: { play: 'Predvajaj', more: 'Več informacij' },
+        sq: { play: 'Luaj', more: 'Më shumë informacion' },
+        sv: { play: 'Spela', more: 'Mer information' },
+        ta: { play: 'இயக்கு', more: 'மேலும் தகவல்' },
+        th: { play: 'เล่น', more: 'ข้อมูลเพิ่มเติม' },
+        tr: { play: 'Oynat', more: 'Daha fazla bilgi' },
+        uk: { play: 'Відтворити', more: 'Докладніше' },
+        ur: { play: 'چلائیں', more: 'مزید معلومات' },
+        vi: { play: 'Phát', more: 'Thông tin khác' },
+        'zh-cn': { play: '播放', more: '更多信息' },
+        'zh-hk': { play: '播放', more: '更多資訊' },
+        'zh-tw': { play: '播放', more: '更多資訊' }
+    };
+
+    function nfHeroLabel(kind) {
+        var lang = (document.documentElement.getAttribute('lang') || 'en')
+            .toLowerCase().replace(/_/g, '-');
+        var entry = NF_HERO_LABELS[lang] || NF_HERO_LABELS[lang.split('-')[0]] || NF_HERO_LABELS.en;
+        return entry[kind];
+    }
+
     function heroSlideHtml(item, active) {
         var bg = ApiClient.getScaledImageUrl(item.Id, { type: 'Backdrop', maxWidth: 1920, tag: item.BackdropImageTags[0] });
         var serverId = item.ServerId || (ApiClient.serverId && ApiClient.serverId());
         var detailUrl = '#/details?id=' + item.Id + (serverId ? '&serverId=' + serverId : '');
+        var playLabel = esc(nfHeroLabel('play'));
+        var moreLabel = esc(nfHeroLabel('more'));
 
         var titleHtml;
         if (item.ImageTags && item.ImageTags.Logo) {
@@ -457,8 +530,8 @@
             '<div class="nf-hero-bg" style="background-image:url(\'' + bg + '\')"></div>' +
             '<div class="nf-hero-content">' + titleHtml + meta + overview +
                 '<div class="nf-hero-actions">' +
-                    '<a class="nf-hero-btn nf-hero-play" href="' + detailUrl + '"><span class="material-icons" aria-hidden="true">play_arrow</span> Abspielen</a>' +
-                    '<a class="nf-hero-btn nf-hero-info" href="' + detailUrl + '"><span class="material-icons" aria-hidden="true">info</span> Mehr Infos</a>' +
+                    '<a class="nf-hero-btn nf-hero-play" href="' + detailUrl + '" title="' + playLabel + '" aria-label="' + playLabel + '"><span class="material-icons" aria-hidden="true">play_arrow</span></a>' +
+                    '<a class="nf-hero-btn nf-hero-info" href="' + detailUrl + '" title="' + moreLabel + '" aria-label="' + moreLabel + '"><span class="material-icons" aria-hidden="true">info</span></a>' +
                     '<button type="button" class="nf-hero-btn nf-hero-list" data-id="' + item.Id + '" title="Meine Liste"><span class="material-icons" aria-hidden="true">add</span></button>' +
                 '</div>' +
             '</div></div>';

@@ -650,9 +650,9 @@ body, .mainDrawer, .dialog {
     z-index: 100 !important;
 }
 
-.btnPlaystate::after { content: 'Watched' !important; }
-.btnUserRating::after { content: 'Favorite' !important; }
-.btnMoreCommands::after { content: 'More' !important; }
+.btnPlaystate::after { content: attr(title) !important; }
+.btnUserRating::after { content: attr(title) !important; }
+.btnMoreCommands::after { content: attr(title) !important; }
 
 .btnPlaystate:hover::after,
 .btnUserRating:hover::after,
